@@ -1,18 +1,30 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:leave_the_house_app/app.dart';
+import 'package:leave_the_house_app/reminders/view/reminders_page.dart';
+import 'package:leave_the_house_app/utils/routes.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
-  NotificationService();
 
-  final _localNotifications = FlutterLocalNotificationsPlugin();
+  static final NotificationService _singleton = NotificationService._internal();
+
+  factory NotificationService() {
+    return _singleton;
+  }
+
+  NotificationService._internal();
+
+  final localNotificationsPlugin = FlutterLocalNotificationsPlugin();
   final BehaviorSubject<String> behaviorSubject = BehaviorSubject();
+
 
   Future<void> initializePlatformNotifications() async {
     tz.initializeTimeZones();
@@ -22,6 +34,16 @@ class NotificationService {
       ),
     );
 
+
+    /*final NotificationAppLaunchDetails? notificationAppLaunchDetails = !kIsWeb &&
+        Platform.isLinux
+        ? null
+        : await localNotificationsPlugin.getNotificationAppLaunchDetails();
+
+    if (notificationAppLaunchDetails?.didNotificationLaunchApp == true) {
+      LeaveTheHouseAppView.initialRoute = MySecondScreen.routeName;
+    }*/
+
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('app_icon');
 
@@ -30,8 +52,9 @@ class NotificationService {
       android: initializationSettingsAndroid,
     );
 
-    await _localNotifications.initialize(initializationSettings,
+    await localNotificationsPlugin.initialize(initializationSettings,
         onDidReceiveNotificationResponse: selectNotification);
+
   }
 
   void onDidReceiveLocalNotification(
@@ -41,9 +64,7 @@ class NotificationService {
 
   void selectNotification(NotificationResponse notificationResponse) {
     final String? payload = notificationResponse.payload;
-    if (payload != null && payload.isNotEmpty) {
-      behaviorSubject.add(payload);
-    }
+      behaviorSubject.add(payload!);
   }
 
   Future<NotificationDetails> _notificationDetails() async {
@@ -73,7 +94,7 @@ class NotificationService {
     required String payload,
   }) async {
     final platformChannelSpecifics = await _notificationDetails();
-    await _localNotifications.show(
+    await localNotificationsPlugin.show(
       id,
       title,
       body,
@@ -93,20 +114,16 @@ class NotificationService {
   }
 
   Future<void> showScheduledLocalNotification(
-      {required int id,
-      required String title,
-      required String body,
-      required String payload,
-      required TimeOfDay timeOfDay}) async {
-    DateTime timeFuture = DateTime(2022, DateTime.november, 15, 20, 22);
+      {
+        required TimeOfDay timeOfDay
+      }) async {
     final platformChannelSpecifics = await _notificationDetails();
-    await _localNotifications.zonedSchedule(
-        id,
-        title,
-        body,
+    await localNotificationsPlugin.zonedSchedule(
+        01,
+        'text',
+        'text',
         _selectDate(timeOfDay),
         platformChannelSpecifics,
-        payload: payload,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         androidAllowWhileIdle: true,
