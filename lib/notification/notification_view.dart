@@ -70,15 +70,20 @@ class _NotificationView extends State<NotificationView> {
                   ),
                   Switch(
                       value: state.isEnabled,
-                      onChanged: (value) {
+                      onChanged: (bool value) {
                         setState(() {
-                          if(state.isEnabled == false) {
+                          if (value == true) {
+                            context.read<NotificationCubit>().enableNotification();
+                          } else if (value == false) {
+                            context.read<NotificationCubit>().disableNotification();
+                          }
+                          /*if(state.isEnabled == false) {
                             context.read<NotificationCubit>().enableNotification();
                             print(state.isEnabled);
                           } else {
                             context.read<NotificationCubit>().disableNotification();
                             print(state.isEnabled);
-                          }
+                          }*/
                         });
                   })
                 ],

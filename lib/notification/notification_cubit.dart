@@ -18,6 +18,8 @@ class NotificationCubit extends HydratedCubit<NotificationState> {
   Future<void> changeTime(TimeOfDay timeOfDay) async {
     try {
       if(state.isEnabled == true) {
+        await notificationService.localNotificationsPlugin.cancelAll();
+        await notificationService.showScheduledLocalNotification(timeOfDay: timeOfDay);
         emit(state.copyWith(
             time: timeOfDay, status: NotificationStatus.timeChanged));
       }
